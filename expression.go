@@ -20,3 +20,11 @@ func ParseExpression(expr string) (Expression, error) {
 
 	return NewSubnetExpression(expr)
 }
+
+func IsIPv4(ip net.IP) bool {
+	return ip.To4() != nil
+}
+
+func IsIPv6(ip net.IP) bool {
+	return !IsIPv4(ip)
+}
