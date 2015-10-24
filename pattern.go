@@ -30,13 +30,15 @@ func NewPatternExpression(pattern string) (*PatternExpression, error) {
 	list := make([]chunk, 0)
 
 	for idx, chunk := range chunks {
-		if strings.Contains(chunk, "*") == false { // we have a literal value to compare against
+		if len(chunk) == 0 {
+			list = append(list, literalChunk{0})
+		} else if strings.Contains(chunk, "*") == false { // we have a literal value to compare against
 			// It's okay if the expression contains '.0.' and the IP contains '.000.',
 			// we just care for the numerical value (and it's also okay to interprete
 			// IPv4 chunks as hex values, as long as we interprete both as hex).
 			i, err := strconv.ParseInt(chunk, 16, 0)
 			if err != nil {
-				return nil, fmt.Errorf("Pattern contains invalid characters in chunk %d.", idx+1)
+				return nil, fmt.Errorf("Pattern '%s' contains invalid characters in chunk %d.", pattern, idx+1)
 			}
 
 			list = append(list, literalChunk{i})
@@ -47,7 +49,7 @@ func NewPatternExpression(pattern string) (*PatternExpression, error) {
 
 			expr, err := regexp.Compile(chunk)
 			if err != nil {
-				return nil, fmt.Errorf("Pattern contains invalid characters in chunk %d.", idx+1)
+				return nil, fmt.Errorf("Pattern '%s' contains invalid characters in chunk %d.", pattern, idx+1)
 			}
 
 			list = append(list, patternChunk{expr})
