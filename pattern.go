@@ -29,6 +29,23 @@ func NewPatternExpression(pattern string) (*PatternExpression, error) {
 	chunks := splitter.Split(pattern, -1)
 	list := make([]chunk, 0)
 
+	ipv6 := strings.Contains(pattern, ":")
+	length := 0
+
+	if ipv6 {
+		length = 8
+	} else {
+		length = 4
+	}
+
+	if len(chunks) != length {
+		if ipv6 {
+			return nil, fmt.Errorf("Pattern '%s' looked like IPv6, but did not contain 8 chunks. You cannot leave out chunks in patterns.", pattern)
+		} else {
+			return nil, fmt.Errorf("Pattern '%s' looked like IPv4, but did not contain 4 chunks.", pattern)
+		}
+	}
+
 	for idx, chunk := range chunks {
 		if len(chunk) == 0 {
 			list = append(list, literalChunk{0})
@@ -60,7 +77,14 @@ func NewPatternExpression(pattern string) (*PatternExpression, error) {
 }
 
 func (self *PatternExpression) Matches(ip net.IP) bool {
-	ipString := ip.String()
+	ipv4 := IsIPv4(ip)
+	patternv4 := len(self.chunks) == 4
+
+	if ipv4 != patternv4 {
+		return false
+	}
+
+	ipString := toExpanded(ip)
 	ipChunks := splitter.Split(ipString, -1)
 
 	// the user probably mixed IPv4 and IPv6
@@ -75,6 +99,25 @@ func (self *PatternExpression) Matches(ip net.IP) bool {
 	}
 
 	return true
+}
+
+func toExpanded(ip net.IP) string {
+	if IsIPv4(ip) {
+		return ip.String()
+	}
+
+	// net.IP is just an alias for []byte
+	result := ""
+
+	for i := 0; i < net.IPv6len; i += 2 {
+		if i > 0 {
+			result = result + ":"
+		}
+
+		result = result + fmt.Sprintf("%02x%02x", ip[i], ip[i+1])
+	}
+
+	return result
 }
 
 type chunk interface {

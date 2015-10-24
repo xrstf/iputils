@@ -17,8 +17,7 @@ func TestParseExpression(t *testing.T) {
 		{"::1/8", "subnet"},
 		{"fe80::/128", "subnet"},
 
-		{"fe*::", "pattern"},
-		{"::1:*", "pattern"},
+		{"fe*:0:0:0:0:0:0:0", "pattern"},
 		{"127.*.*.0", "pattern"},
 	}
 
