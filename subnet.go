@@ -3,13 +3,19 @@ package iputils
 import "net"
 
 type SubnetExpression struct {
-	subnet string
+	ip      net.IP
+	network *net.IPNet
 }
 
 func NewSubnetExpression(subnet string) (*SubnetExpression, error) {
-	return &SubnetExpression{subnet}, nil
+	ip, network, err := net.ParseCIDR(subnet)
+	if err != nil {
+		return nil, err
+	}
+
+	return &SubnetExpression{ip, network}, nil
 }
 
 func (self *SubnetExpression) Matches(ip net.IP) bool {
-	return false
+	return self.network.Contains(ip)
 }
