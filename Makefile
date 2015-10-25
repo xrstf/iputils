@@ -9,3 +9,6 @@ test: fix
 fix: *.go
 	goimports -l -w .
 	gofmt -l -w .
+
+travis:
+	go test -v

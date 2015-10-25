@@ -1,3 +1,5 @@
+// Copyright (c) 2015, xrstf | MIT licensed
+
 package iputils
 
 import (
@@ -12,10 +14,21 @@ var shrinker = regexp.MustCompile("\\*+")
 var cleaner = regexp.MustCompile("[^0-9a-f.:*]")
 var splitter = regexp.MustCompile("[.:]")
 
+// A pattern expression is the string representation of any IP address, but with
+// optional * characters that act as placeholders.
 type PatternExpression struct {
 	chunks []chunk
 }
 
+// Parses a pattern and constructs a new pattern expression.
+//
+// A valid pattern must always contain all chunks of a IP address, so 4 for IPv4
+// and 8 for IPv6. Even if IPv6 allows collapsing 0 values, patterns must not be
+// collapsed. So "0:0:0:0:*:0:0:0" is valid, but "::*" is not.
+//
+// An error is returned if there is not the correct amount of chunks in the given
+// pattern or any of the chunks is invalid (e.g. contains non-hexadecimal characters,
+// besides the * sign).
 func NewPatternExpression(pattern string) (*PatternExpression, error) {
 	pattern = strings.ToLower(pattern)
 
@@ -76,6 +89,7 @@ func NewPatternExpression(pattern string) (*PatternExpression, error) {
 	return &PatternExpression{list}, nil
 }
 
+// Check if the expression matches a given IP address.
 func (self *PatternExpression) Matches(ip net.IP) bool {
 	ipv4 := IsIPv4(ip)
 	patternv4 := len(self.chunks) == 4
